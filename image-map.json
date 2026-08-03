@@ -1,0 +1,109 @@
+{
+  "archive": {
+    "parts": [
+      "images.part00",
+      "images.part01",
+      "images.part02",
+      "images.part03",
+      "images.part04"
+    ],
+    "bytes": 2174658,
+    "sha256": "328dd6a1a4c865c8a374411add51492d39ec6f2ecd11e144fc2ce9e050ceddbe"
+  },
+  "pages": [
+    {
+      "file": "index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"/images/portfolio-nightlife.svg\" alt=\"Nightlife campaign placeholder\" loading=\"lazy\">",
+          "to": "<img src=\"/images/epic-after-dark-image-homepage.webp\" alt=\"EPIC After Dark Las Vegas performer\" loading=\"lazy\" decoding=\"async\">"
+        }
+      ]
+    },
+    {
+      "file": "talent/index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"/images/portfolio-campaign.svg\" alt=\"Editorial campaign image placeholder\" loading=\"lazy\" decoding=\"async\">",
+          "to": "<img src=\"/images/talent-page-editorial-campaign.webp\" alt=\"EPIC Las Vegas editorial campaign talent\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "\n  <figcaption class=\"asset-note\">REPLACE WITH: approved hero image featuring a diverse group of EPIC talent in a cinematic Las Vegas editorial.</figcaption>",
+          "to": ""
+        }
+      ]
+    },
+    {
+      "file": "become-talent/index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"/images/talent-05.svg\" alt=\"Aspiring EPIC talent application placeholder\" loading=\"lazy\" decoding=\"async\">",
+          "to": "<img src=\"/images/become-talent-page-epic-talent-05.webp\" alt=\"EPIC talent test shoot and casting session\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "\n  <figcaption class=\"asset-note\">REPLACE WITH: authentic behind-the-scenes image of an EPIC test shoot, coaching session, or casting day.</figcaption>",
+          "to": ""
+        }
+      ]
+    },
+    {
+      "file": "contact/index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"/images/contact-editorial.svg\" alt=\"Client booking consultation placeholder\" loading=\"lazy\" decoding=\"async\">",
+          "to": "<img src=\"/images/contact-us-page-hero.webp\" alt=\"EPIC client booking consultation\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "\n  <figcaption class=\"asset-note\">REPLACE WITH: polished client consultation, event arrival, or talent lineup image.</figcaption>",
+          "to": ""
+        }
+      ]
+    },
+    {
+      "file": "about/index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"https://assets.cdn.filesafe.space/YzjwmP6zpvDUp28hrM1o/media/6885cadad640fe99746840eb.png\" alt=\"EPIC Models and Talent team\" loading=\"lazy\" decoding=\"async\">",
+          "to": "<img src=\"/images/about-page-replace-hero-image.webp\" alt=\"EPIC Models and Talent team\" loading=\"lazy\" decoding=\"async\">"
+        }
+      ]
+    },
+    {
+      "file": "portfolio/index.html",
+      "replacements": [
+        {
+          "from": "<img src=\"/images/portfolio-nightlife.svg\" alt=\"Las Vegas nightlife campaign placeholder\" loading=\"lazy\" decoding=\"async\">",
+          "to": "<img src=\"/images/portfolio-page-after-dark-hero.webp\" alt=\"EPIC After Dark Las Vegas portfolio campaign\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "\n  <figcaption class=\"asset-note\">REPLACE WITH: strongest available EPIC campaign hero image or short muted showreel.</figcaption>",
+          "to": ""
+        },
+        {
+          "from": "<img src=\"/images/portfolio-campaign.svg\" alt=\"Midnight on the Strip project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: cinematic fashion editorial photographed at night on the Las Vegas Strip.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-campaign-editorial.webp\" alt=\"Midnight on the Strip editorial campaign\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "<img src=\"/images/portfolio-convention.svg\" alt=\"The Convention Floor project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: real EPIC trade-show team engaging attendees and representing a client.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-convention-energy.webp\" alt=\"EPIC convention and trade-show team\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "<img src=\"/images/portfolio-poolside.svg\" alt=\"Golden Hour project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: resort poolside campaign with polished swim or lifestyle talent.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-after-dark-resort-swim-lifestyle.webp\" alt=\"EPIC resort swim and lifestyle campaign\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "<img src=\"/images/portfolio-nightlife.svg\" alt=\"After Dark project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: nightclub or VIP event talent under neon and architectural lighting.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-after-dark-nightlife-performers.webp\" alt=\"EPIC After Dark nightlife performers\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "<img src=\"/images/talent-03.svg\" alt=\"Made for the Camera project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: commercial or UGC campaign stills with measurable client results.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-epic-talent-03-commercial-content.webp\" alt=\"EPIC commercial content campaign results\" loading=\"lazy\" decoding=\"async\">"
+        },
+        {
+          "from": "<img src=\"/images/about-story.svg\" alt=\"Backstage project placeholder\" loading=\"lazy\"><figcaption>REPLACE WITH: hair, makeup, wardrobe and talent preparation behind the scenes.</figcaption>",
+          "to": "<img src=\"/images/portfolio-page-the-epic-story.webp\" alt=\"The EPIC Story backstage production\" loading=\"lazy\" decoding=\"async\">"
+        }
+      ]
+    }
+  ]
+}
