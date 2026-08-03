@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -12,7 +12,7 @@ const sourceParts = [
   'source.chunk07a', 'source.chunk07b'
 ];
 
-const chunks = await Promise.all(sourceParts.map((file) => readFile(join(root, 'bootstrap', file), 'utf8'));
+const chunks = await Promise.all(sourceParts.map((file) => readFile(join(root, 'bootstrap', file), 'utf8')));
 const encoded = chunks.join('').replace(/\s+/g, '');
 const encodedHash = createHash('sha256').update(encoded).digest('hex');
 if (encoded.length !== 62752) throw new Error(`Unexpected EPIC source length: ${encoded.length}`);
@@ -67,4 +67,65 @@ for (const script of ['build.mjs', 'check.mjs']) {
 
 await rm(outputDir, { recursive: true, force: true });
 await cp(join(sourceDir, 'dist'), outputDir, { recursive: true });
-console.log(`EPIC Models & Talent production site built from GitHub. Desktop: ${urls.desktop} Mobile: ${urls.mobile}`);
+
+const imageMap = JSON.parse(await readFile(join(root, 'image-map.json'), 'utf8'));
+const siteImageArchive = join(root, imageMap.archive.file);
+let archiveStats;
+try {
+  archiveStats = await stat(siteImageArchive);
+} catch {
+  throw new Error(`${imageMap.archive.file} is missing from the production branch.`);
+}
+if (archiveStats.size !== imageMap.archive.bytes) {
+  throw new Error(`Unexpected ${imageMap.archive.file} size: ${archiveStats.size}`);
+}
+const siteImageBytes = await readFile(siteImageArchive);
+const siteImageHash = createHash('sha256').update(siteImageBytes).digest('hex');
+if (siteImageHash !== imageMap.archive.sha256) {
+  throw new Error(`${imageMap.archive.file} checksum mismatch: ${siteImageHash}`);
+}
+
+const imageTemp = join(root, '.epic-site-images');
+await rm(imageTemp, { recursive: true, force: true });
+await mkdir(imageTemp, { recursive: true });
+const unzip = spawnSync('unzip', ['-oq', siteImageArchive, '-d', imageTemp], { stdio: 'inherit' });
+if (unzip.status !== 0) throw new Error(`Unable to extract ${imageMap.archive.file}.`);
+
+async function findNamedFile(directory, fileName) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      const nested = await findNamedFile(entryPath, fileName);
+      if (nested) return nested;
+    } else if (entry.name === fileName) {
+      return entryPath;
+    }
+  }
+  return null;
+}
+
+const outputImages = join(outputDir, 'images');
+await mkdir(outputImages, { recursive: true });
+for (const fileName of imageMap.archive.files) {
+  const sourceImage = await findNamedFile(imageTemp, fileName);
+  if (!sourceImage) throw new Error(`Required labeled image not found in ZIP: ${fileName}`);
+  await cp(sourceImage, join(outputImages, fileName));
+}
+
+for (const page of imageMap.pages) {
+  const pagePath = join(outputDir, page.file);
+  let html = await readFile(pagePath, 'utf8');
+  for (const replacement of page.replacements) {
+    if (!html.includes(replacement.from)) {
+      throw new Error(`Expected image placeholder was not found in ${page.file}: ${replacement.from.slice(0, 100)}`);
+    }
+    html = html.replace(replacement.from, replacement.to);
+  }
+  await writeFile(pagePath, html, 'utf8');
+}
+
+for (const fileName of imageMap.archive.files) {
+  await stat(join(outputImages, fileName));
+}
+
+console.log(`EPIC Models & Talent built with ${imageMap.archive.files.length} labeled site images. Desktop: ${urls.desktop} Mobile: ${urls.mobile}`);
