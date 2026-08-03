@@ -1,14 +1,22 @@
 {
   "archive": {
-    "parts": [
-      "images.part00",
-      "images.part01",
-      "images.part02",
-      "images.part03",
-      "images.part04"
-    ],
-    "bytes": 2174658,
-    "sha256": "328dd6a1a4c865c8a374411add51492d39ec6f2ecd11e144fc2ce9e050ceddbe"
+    "file": "epic-site-images.zip",
+    "bytes": 2174667,
+    "sha256": "f34e87feb6dfa26d2df81c4fce8c74c2d33609baa63e3ebcde545f7fe4462c50",
+    "files": [
+      "about-page-replace-hero-image.webp",
+      "become-talent-page-epic-talent-05.webp",
+      "contact-us-page-hero.webp",
+      "epic-after-dark-image-homepage.webp",
+      "portfolio-page-after-dark-hero.webp",
+      "portfolio-page-after-dark-nightlife-performers.webp",
+      "portfolio-page-after-dark-resort-swim-lifestyle.webp",
+      "portfolio-page-campaign-editorial.webp",
+      "portfolio-page-convention-energy.webp",
+      "portfolio-page-epic-talent-03-commercial-content.webp",
+      "portfolio-page-the-epic-story.webp",
+      "talent-page-editorial-campaign.webp"
+    ]
   },
   "pages": [
     {
