@@ -58,6 +58,7 @@ function detectVariant(label) {
 }
 
 function detectCategory(label) {
+  // Keep these files in the uploaded archive, but do not assign them to a public division.
   if (/\bdesktop homepage models 2\b/.test(label) || /\bmobile homepage talent\b/.test(label)) return null;
   if (/\bbrand\b.*\bambassadors?\b|\batmosphere\b/.test(label)) return 'brand-ambassadors';
   if (/\bevent\b.*\btalent\b|\bevent\b.*\bhosts?\b|\bhosts?\b.*\bvip\b/.test(label)) return 'event-talent';
@@ -128,6 +129,15 @@ for (const division of divisions) {
   const picture = `<picture><source media="(max-width: 780px)" srcset="/images/${files.mobile}"><img src="/images/${files.desktop}" alt="${division.alt}" loading="lazy" decoding="async"></picture>`;
   homepage = homepage.replace(imagePattern, picture);
 }
+
+const kidsDivisionPattern = /<a class="division-strip interactive-hover" href="\/talent#kids-and-teens"[\s\S]*?<\/a>/;
+if (!kidsDivisionPattern.test(homepage)) throw new Error('Kids & Teens homepage division was not found for removal.');
+homepage = homepage.replace(kidsDivisionPattern, '');
+homepage = homepage.replaceAll('<span>KIDS & TEENS<i>✦</i></span>', '');
+homepage = homepage.replace(
+  '<strong data-counter="6">0</strong><span>+</span><p>Core talent and service divisions</p>',
+  '<strong data-counter="5">0</strong><span>+</span><p>Core talent and service divisions</p>'
+);
 await writeFile(homepagePath, homepage, 'utf8');
 
 for (const division of divisions) {
@@ -135,9 +145,19 @@ for (const division of divisions) {
   await stat(join(outputImages, responsive[division.key].mobile));
 }
 
+const publicHtmlFiles = (await listFiles(outputDir)).filter((file) => extname(file).toLowerCase() === '.html');
+const forbiddenOffering = /kids\s*(?:&amp;|&|and)\s*teens|kids-and-teens/i;
+for (const file of publicHtmlFiles) {
+  const html = await readFile(file, 'utf8');
+  if (forbiddenOffering.test(html)) {
+    throw new Error(`Kids & Teens offering still appears in ${relative(outputDir, file)}.`);
+  }
+}
+
 const summary = divisions.map((division) => {
   const desktop = relative(tempDir, detected.get(`${division.key}:desktop`));
   const mobile = relative(tempDir, detected.get(`${division.key}:mobile`));
   return `${division.key}=[${desktop} | ${mobile}]`;
 }).join('; ');
-console.log(`Responsive homepage division images installed: ${summary}`);
+console.log(`Responsive homepage division images installed for five EPIC divisions: ${summary}`);
+console.log(`Retained but intentionally unused archive files: ${ignored.join(', ')}`);
