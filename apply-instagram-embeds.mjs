@@ -14,6 +14,10 @@ const posts = [
   'https://www.instagram.com/p/DagtYx7xa2D/'
 ];
 
+function embedUrl(postUrl) {
+  return `${postUrl}embed/`;
+}
+
 let homepage = await readFile(homepagePath, 'utf8');
 const musePattern = /<section class="section-pad muse-section">[\s\S]*?<\/section>/;
 if (!musePattern.test(homepage)) {
@@ -22,9 +26,16 @@ if (!musePattern.test(homepage)) {
 
 const embeds = posts.map((url, index) => `
         <article class="instagram-embed-card reveal-card">
-          <blockquote class="instagram-media" data-instgrm-permalink="${url}" data-instgrm-version="14">
-            <a class="instagram-embed-fallback" href="${url}" target="_blank" rel="noopener">View EPIC Instagram post ${index + 1}</a>
-          </blockquote>
+          <iframe
+            class="instagram-embed-frame"
+            src="${embedUrl(url)}"
+            title="EPIC Instagram post ${index + 1}"
+            loading="${index < 3 ? 'eager' : 'lazy'}"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+          <noscript><a class="instagram-embed-fallback" href="${url}" target="_blank" rel="noopener">View EPIC Instagram post ${index + 1}</a></noscript>
         </article>`).join('');
 
 const section = `<section class="section-pad muse-section instagram-section">
@@ -40,19 +51,21 @@ const section = `<section class="section-pad muse-section instagram-section">
 
 homepage = homepage.replace(musePattern, section);
 
-const embedScript = '<script async src="https://www.instagram.com/embed.js"></script>';
-if (!homepage.includes('https://www.instagram.com/embed.js')) {
-  if (!homepage.includes('</body>')) throw new Error('Homepage closing body tag was not found.');
-  homepage = homepage.replace('</body>', `  ${embedScript}\n</body>`);
-}
+// The direct /embed/ iframe endpoint gives every post its own isolated loader.
+// Remove the shared Instagram blockquote processor if it is ever present.
+homepage = homepage.replace(/\s*<script[^>]+src="https:\/\/www\.instagram\.com\/embed\.js"[^>]*><\/script>/g, '');
 
 for (const url of posts) {
-  if (!homepage.includes(`data-instgrm-permalink="${url}"`)) {
-    throw new Error(`Instagram embed was not installed: ${url}`);
+  const expected = `src="${embedUrl(url)}"`;
+  if (!homepage.includes(expected)) {
+    throw new Error(`Instagram iframe was not installed: ${url}`);
   }
 }
-if ((homepage.match(/class="instagram-media"/g) || []).length !== posts.length) {
-  throw new Error('Homepage does not contain exactly six Instagram embeds.');
+if ((homepage.match(/class="instagram-embed-frame"/g) || []).length !== posts.length) {
+  throw new Error('Homepage does not contain exactly six Instagram iframe embeds.');
+}
+if (homepage.includes('class="instagram-media"')) {
+  throw new Error('Legacy Instagram blockquote embeds remain on the homepage.');
 }
 
 await writeFile(homepagePath, homepage, 'utf8');
@@ -60,8 +73,8 @@ await writeFile(homepagePath, homepage, 'utf8');
 let styles = await readFile(stylesPath, 'utf8');
 const marker = '/* EPIC Instagram embeds */';
 if (!styles.includes(marker)) {
-  styles += `\n\n${marker}\n.instagram-section{overflow:hidden}\n.instagram-embed-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(18px,2vw,30px);align-items:start;margin-top:clamp(28px,4vw,56px)}\n.instagram-embed-card{min-width:0;overflow:hidden;border:1px solid rgba(198,166,100,.22);border-radius:18px;background:rgba(255,255,255,.035);box-shadow:0 24px 70px rgba(0,0,0,.28)}\n.instagram-embed-card .instagram-media,.instagram-embed-card .instagram-media-rendered,.instagram-embed-card iframe{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important}\n.instagram-embed-fallback{display:flex;min-height:420px;align-items:center;justify-content:center;padding:32px;color:#d7bd82;text-align:center;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;font-size:.78rem}\n@media(max-width:1050px){.instagram-embed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n@media(max-width:680px){.instagram-embed-grid{grid-template-columns:1fr;gap:20px}.instagram-embed-card{border-radius:14px}.instagram-embed-fallback{min-height:360px}}\n`;
+  styles += `\n\n${marker}\n.instagram-section{overflow:hidden}\n.instagram-embed-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(18px,2vw,30px);align-items:start;margin-top:clamp(28px,4vw,56px)}\n.instagram-embed-card{min-width:0;overflow:hidden;border:1px solid rgba(198,166,100,.28);border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.34)}\n.instagram-embed-frame{display:block;width:100%;height:720px;border:0;background:#fff}\n.instagram-embed-fallback{display:flex;min-height:420px;align-items:center;justify-content:center;padding:32px;color:#8e6d26;text-align:center;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;font-size:.78rem}\n@media(max-width:1050px){.instagram-embed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.instagram-embed-frame{height:720px}}\n@media(max-width:680px){.instagram-embed-grid{grid-template-columns:1fr;gap:20px}.instagram-embed-card{border-radius:14px}.instagram-embed-frame{height:680px}.instagram-embed-fallback{min-height:360px}}\n`;
 }
 await writeFile(stylesPath, styles, 'utf8');
 
-console.log(`Installed ${posts.length} official EPIC Instagram embeds on the homepage Muse Wall.`);
+console.log(`Installed ${posts.length} independent EPIC Instagram iframe embeds on the homepage Muse Wall.`);
