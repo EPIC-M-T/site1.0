@@ -58,7 +58,7 @@ function detectVariant(label) {
 }
 
 function detectCategory(label) {
-  // Keep these files in the uploaded archive, but do not assign them to a public division.
+  // Retain these files in the uploaded archive without publishing them as a division.
   if (/\bdesktop homepage models 2\b/.test(label) || /\bmobile homepage talent\b/.test(label)) return null;
   if (/\bbrand\b.*\bambassadors?\b|\batmosphere\b/.test(label)) return 'brand-ambassadors';
   if (/\bevent\b.*\btalent\b|\bevent\b.*\bhosts?\b|\bhosts?\b.*\bvip\b/.test(label)) return 'event-talent';
@@ -120,6 +120,16 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function removeKidsTeenOffering(html) {
+  return html
+    .replace(/<a class="division-strip interactive-hover" href="\/talent#kids-and-teens"[\s\S]*?<\/a>/g, '')
+    .replaceAll('<span>KIDS & TEENS<i>✦</i></span>', '')
+    .replace(
+      '<strong data-counter="6">0</strong><span>+</span><p>Core talent and service divisions</p>',
+      '<strong data-counter="5">0</strong><span>+</span><p>Core talent and service divisions</p>'
+    );
+}
+
 const homepagePath = join(outputDir, 'index.html');
 let homepage = await readFile(homepagePath, 'utf8');
 for (const division of divisions) {
@@ -130,14 +140,10 @@ for (const division of divisions) {
   homepage = homepage.replace(imagePattern, picture);
 }
 
-const kidsDivisionPattern = /<a class="division-strip interactive-hover" href="\/talent#kids-and-teens"[\s\S]*?<\/a>/;
-if (!kidsDivisionPattern.test(homepage)) throw new Error('Kids & Teens homepage division was not found for removal.');
-homepage = homepage.replace(kidsDivisionPattern, '');
-homepage = homepage.replaceAll('<span>KIDS & TEENS<i>✦</i></span>', '');
-homepage = homepage.replace(
-  '<strong data-counter="6">0</strong><span>+</span><p>Core talent and service divisions</p>',
-  '<strong data-counter="5">0</strong><span>+</span><p>Core talent and service divisions</p>'
-);
+if (!/href="\/talent#kids-and-teens"/.test(homepage)) {
+  throw new Error('Kids & Teens homepage division was not found for removal.');
+}
+homepage = removeKidsTeenOffering(homepage);
 await writeFile(homepagePath, homepage, 'utf8');
 
 for (const division of divisions) {
@@ -146,6 +152,15 @@ for (const division of divisions) {
 }
 
 const publicHtmlFiles = (await listFiles(outputDir)).filter((file) => extname(file).toLowerCase() === '.html');
+for (const file of publicHtmlFiles) {
+  let html = await readFile(file, 'utf8');
+  const cleaned = removeKidsTeenOffering(html);
+  if (cleaned !== html) {
+    html = cleaned;
+    await writeFile(file, html, 'utf8');
+  }
+}
+
 const forbiddenOffering = /kids\s*(?:&amp;|&|and)\s*teens|kids-and-teens/i;
 for (const file of publicHtmlFiles) {
   const html = await readFile(file, 'utf8');
