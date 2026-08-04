@@ -58,11 +58,10 @@ function detectVariant(label) {
 }
 
 function detectCategory(label) {
-  if (/\bdesktop homepage models 2\b/.test(label) || /\bmobile homepage talent\b/.test(label)) return 'kids-and-teens';
+  if (/\bdesktop homepage models 2\b/.test(label) || /\bmobile homepage talent\b/.test(label)) return null;
   if (/\bbrand\b.*\bambassadors?\b|\batmosphere\b/.test(label)) return 'brand-ambassadors';
   if (/\bevent\b.*\btalent\b|\bevent\b.*\bhosts?\b|\bhosts?\b.*\bvip\b/.test(label)) return 'event-talent';
   if (/\bspecialty\b|\bspeciality\b/.test(label)) return 'specialty-talent';
-  if (/\bkids?\b|\bteens?\b|\byouth\b/.test(label)) return 'kids-and-teens';
   if (/\bcreators?\b|\binfluencers?\b|\bugc\b/.test(label)) return 'creators';
   if (/\bmodels?\b|\bfashion\b|\bcommercial\b|\bswim\b/.test(label)) return 'models';
   return null;
@@ -90,7 +89,6 @@ const divisions = [
   { key: 'event-talent', alt: 'Event Talent division' },
   { key: 'creators', alt: 'Creators division' },
   { key: 'brand-ambassadors', alt: 'Brand Ambassadors division' },
-  { key: 'kids-and-teens', alt: 'Kids & Teens division' },
   { key: 'specialty-talent', alt: 'Specialty Talent division' }
 ];
 
