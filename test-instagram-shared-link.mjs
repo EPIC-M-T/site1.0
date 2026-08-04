@@ -2,21 +2,34 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const homepagePath = join(process.cwd(), 'dist', 'index.html');
-const original = 'https://www.instagram.com/p/DaSwksAlF2T/embed/';
-const sharedLinkEmbed = 'https://www.instagram.com/p/DaSwksAlF2T/embed/?utm_source=ig_web_copy_link&amp;igsh=NTc4MTIwNjQ2YQ%3D%3D';
-
 let homepage = await readFile(homepagePath, 'utf8');
-const occurrences = homepage.split(original).length - 1;
 
-if (occurrences !== 1) {
-  throw new Error(`Expected exactly one post #1 embed URL, found ${occurrences}.`);
+const iframePattern = /<iframe\s+class="instagram-native-frame"[\s\S]*?<\/iframe>/g;
+const iframes = homepage.match(iframePattern) || [];
+
+if (iframes.length !== 6) {
+  throw new Error(`Expected exactly six Instagram iframe blocks, found ${iframes.length}.`);
 }
 
-homepage = homepage.replace(original, sharedLinkEmbed);
+const postOneIframe = iframes[0];
+const postTwoIframe = iframes[1];
 
-if (!homepage.includes(sharedLinkEmbed)) {
-  throw new Error('The copied-link Instagram embed test was not installed.');
+if (!postTwoIframe.includes('https://www.instagram.com/p/DbScVFgJWmd/embed/')) {
+  throw new Error('Could not locate the known-working post #2 iframe URL.');
+}
+
+const clonedPostOneIframe = postTwoIframe
+  .replace('https://www.instagram.com/p/DbScVFgJWmd/embed/', 'https://www.instagram.com/p/DaSwksAlF2T/embed/')
+  .replace('title="EPIC Instagram post 2"', 'title="EPIC Instagram post 1"');
+
+homepage = homepage.replace(postOneIframe, clonedPostOneIframe);
+
+if (!homepage.includes('https://www.instagram.com/p/DaSwksAlF2T/embed/')) {
+  throw new Error('Post #1 did not receive the cloned post #2 iframe structure.');
+}
+if (homepage.includes('utm_source=ig_web_copy_link') || homepage.includes('igsh=')) {
+  throw new Error('A copied-link tracking token still remains in the post #1 iframe.');
 }
 
 await writeFile(homepagePath, homepage, 'utf8');
-console.log('Testing copied Instagram share token on post #1 only; layout and posts #2–#6 unchanged.');
+console.log('Post #1 now uses a literal clone of the working post #2 iframe markup; only shortcode and title differ.');
