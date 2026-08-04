@@ -58,9 +58,10 @@ function detectVariant(label) {
 }
 
 function detectCategory(label) {
+  if (label === 'desktop homepage models 2' || label === 'mobile homepage talent') return 'kids-and-teens';
   if (/\bbrand\b.*\bambassadors?\b|\batmosphere\b/.test(label)) return 'brand-ambassadors';
   if (/\bevent\b.*\btalent\b|\bevent\b.*\bhosts?\b|\bhosts?\b.*\bvip\b/.test(label)) return 'event-talent';
-  if (/\bspecialty\b/.test(label)) return 'specialty-talent';
+  if (/\bspecialty\b|\bspeciality\b/.test(label)) return 'specialty-talent';
   if (/\bkids?\b|\bteens?\b|\byouth\b/.test(label)) return 'kids-and-teens';
   if (/\bcreators?\b|\binfluencers?\b|\bugc\b/.test(label)) return 'creators';
   if (/\bmodels?\b|\bfashion\b|\bcommercial\b|\bswim\b/.test(label)) return 'models';
