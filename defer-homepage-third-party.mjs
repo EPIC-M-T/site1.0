@@ -4,6 +4,19 @@ import { join } from 'node:path';
 const homepagePath = join(process.cwd(), 'dist', 'index.html');
 let homepage = await readFile(homepagePath, 'utf8');
 
+// Vercel serves static assets with a long immutable cache lifetime. The source
+// site uses stable filenames, so add a deployment-specific query key to ensure
+// browsers receive the current hero CSS and application runtime immediately.
+const assetVersion = '20260808-hero-performance-v1';
+homepage = homepage.replace(
+  'href="/assets/styles.css"',
+  `href="/assets/styles.css?v=${assetVersion}"`
+);
+homepage = homepage.replace(
+  'src="/assets/app.js"',
+  `src="/assets/app.js?v=${assetVersion}"`
+);
+
 homepage = homepage.replace(
   /\s*<script async src="https:\/\/www\.instagram\.com\/embed\.js"><\/script>\s*<script data-epic-instagram-loader>[\s\S]*?<\/script>/,
   ''
@@ -76,6 +89,12 @@ if ((homepage.match(/www\.instagram\.com\/embed\.js/g) || []).length !== 1) {
 if (homepage.includes('<script async src="https://www.instagram.com/embed.js"')) {
   throw new Error('Instagram embed.js still loads eagerly.');
 }
+if (!homepage.includes(`/assets/styles.css?v=${assetVersion}`)) {
+  throw new Error('Homepage stylesheet cache busting was not applied.');
+}
+if (!homepage.includes(`/assets/app.js?v=${assetVersion}`)) {
+  throw new Error('Homepage application cache busting was not applied.');
+}
 
 await writeFile(homepagePath, homepage, 'utf8');
-console.log('Deferred Instagram embed.js until the Muse Wall approaches the viewport.');
+console.log('Deferred Instagram and versioned homepage CSS/JS to prevent stale immutable-cache assets.');
