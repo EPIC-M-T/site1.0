@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 
 const dist = join(process.cwd(), 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-final-polish-v4';
+const assetVersion = '20260809-final-polish-v5';
 
 async function findHtml(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -29,6 +29,38 @@ const mobilePreloaderSafety = `<script data-epic-mobile-preloader-safety>
   })();
 </script>`;
 
+/* Desktop receives an independent release path that does not depend on the hero
+   video's loadeddata/canplay events. This prevents the homepage curtain from
+   ever remaining over the hero when autoplay, decoding, or a browser extension
+   delays those media events. */
+const desktopCurtainSafety = `<script data-epic-desktop-curtain-safety>
+  (() => {
+    if (window.matchMedia('(max-width: 780px)').matches) return;
+
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+
+      document.documentElement.classList.add('epic-video-ready');
+      const intro = document.querySelector('[data-epic-liquid-intro]');
+      if (!intro) return;
+
+      intro.setAttribute('aria-hidden', 'true');
+      window.setTimeout(() => intro.remove(), 1050);
+    };
+
+    const schedule = () => window.setTimeout(release, 900);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', schedule, { once: true });
+    } else {
+      schedule();
+    }
+
+    window.setTimeout(release, 2100);
+  })();
+</script>`;
+
 const htmlFiles = await findHtml(dist);
 let homepageUpdated = false;
 
@@ -41,32 +73,40 @@ for (const path of htmlFiles) {
     if (!html.includes('data-epic-mobile-preloader-safety')) {
       html = html.replace('</body>', `${mobilePreloaderSafety}\n</body>`);
     }
+    if (!html.includes('data-epic-desktop-curtain-safety')) {
+      html = html.replace('</body>', `${desktopCurtainSafety}\n</body>`);
+    }
     homepageUpdated = true;
   }
 
   await writeFile(path, html, 'utf8');
 }
 
-/* The desktop canvas keeps the measured glyph crop but steps the visible word
-   down by roughly 1.5%, enough to protect the C on very wide displays while
-   retaining the nearly edge-to-edge impact. */
+/* Preserve the measured desktop glyph canvas while moving the complete word a
+   fraction left and reducing it by one additional percentage point. This uses
+   the available left-side breathing room to protect the C on wide displays. */
 const desktopMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 660 260'%3E%3Ctext x='330' y='228' text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='300' font-weight='900' letter-spacing='-22'%3EEPIC%3C/text%3E%3C/svg%3E")`;
 
-/* Mobile becomes an evenly balanced 2x2 field. The SVG uses a phone-shaped
-   canvas so the four letters consume almost the entire viewport without
-   clipping or creating large empty bands. */
+/* Mobile remains the approved evenly balanced 2x2 field while the user decides
+   whether to refine that composition further. */
 const mobileMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 560 1080'%3E%3Cg text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='400' font-weight='900'%3E%3Ctext x='145' y='460'%3EE%3C/text%3E%3Ctext x='415' y='460'%3EP%3C/text%3E%3Ctext x='145' y='970'%3EI%3C/text%3E%3Ctext x='415' y='970'%3EC%3C/text%3E%3C/g%3E%3C/svg%3E")`;
 
 let styles = await readFile(stylesPath, 'utf8');
-styles += `\n\n/* EPIC final hero precision v4 */\n
+styles += `\n\n/* EPIC final hero precision v5 */\n
 @media (min-width:781px){
   .epic-mask-video{
     -webkit-mask-image:${desktopMask}!important;
     mask-image:${desktopMask}!important;
-    -webkit-mask-size:min(96.5vw,245svh) auto!important;
-    mask-size:min(96.5vw,245svh) auto!important;
-    -webkit-mask-position:center center!important;
-    mask-position:center center!important;
+    -webkit-mask-size:min(95.5vw,242svh) auto!important;
+    mask-size:min(95.5vw,242svh) auto!important;
+    -webkit-mask-position:calc(50% - .9vw) center!important;
+    mask-position:calc(50% - .9vw) center!important;
+  }
+
+  /* The desktop homepage curtain is deliberately graphic and minimal. Remove
+     the white EPIC composition and let the two matte-black halves separate. */
+  body.home-page .epic-split-intro .preloader-center-split{
+    display:none!important;
   }
 
   /* Fill the hero canvas completely when the visit-long static fallback takes
@@ -117,10 +157,11 @@ styles += `\n\n/* EPIC final hero precision v4 */\n
 `;
 await writeFile(stylesPath, styles, 'utf8');
 
-if (!homepageUpdated) throw new Error('Homepage mobile preloader safety was not installed.');
-if (!styles.includes('min(96.5vw,245svh)')) throw new Error('Desktop mask reduction was not installed.');
-if (!styles.includes('viewBox=\'0 0 560 1080\'')) throw new Error('Mobile 2x2 EPIC mask was not installed.');
-if (!styles.includes('body.home-page .preloader.split-preloader')) throw new Error('Mobile split preloader was not restored.');
-if (!styles.includes('.bikini-prize-ribbon>strong:last-child')) throw new Error('Final prize divider was not restored.');
+if (!homepageUpdated) throw new Error('Homepage curtain safety was not installed.');
+if (!styles.includes('min(95.5vw,242svh)')) throw new Error('Desktop mask clearance was not installed.');
+if (!styles.includes('calc(50% - .9vw)')) throw new Error('Desktop mask recentering was not installed.');
+if (!styles.includes('body.home-page .epic-split-intro .preloader-center-split')) throw new Error('Desktop white loader content was not removed.');
+if (!styles.includes('viewBox=\'0 0 560 1080\'')) throw new Error('Mobile 2x2 EPIC mask was not preserved.');
+if (!styles.includes('.bikini-prize-ribbon>strong:last-child')) throw new Error('Final prize divider was not preserved.');
 
-console.log(`Applied final EPIC hero precision, mobile 2x2 mask, split loader, static cover fill, and prize divider across ${htmlFiles.length} generated pages.`);
+console.log(`Applied desktop curtain fail-safe, removed white loader content, cleared the C edge, and preserved the approved mobile hero across ${htmlFiles.length} generated pages.`);
