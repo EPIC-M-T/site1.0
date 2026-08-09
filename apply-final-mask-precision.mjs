@@ -3,7 +3,8 @@ import { join, relative } from 'node:path';
 
 const dist = join(process.cwd(), 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-final-polish-v5';
+const assetVersion = '20260809-final-polish-v6';
+const brandLogo = 'https://assets.cdn.filesafe.space/YzjwmP6zpvDUp28hrM1o/media/6877effcc00dfc571e6a416c.png';
 
 async function findHtml(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -29,35 +30,60 @@ const mobilePreloaderSafety = `<script data-epic-mobile-preloader-safety>
   })();
 </script>`;
 
-/* Desktop receives an independent release path that does not depend on the hero
-   video's loadeddata/canplay events. This prevents the homepage curtain from
-   ever remaining over the hero when autoplay, decoding, or a browser extension
-   delays those media events. */
+/* A dedicated desktop curtain is independent of the hero video's original
+   liquid-intro lifecycle. The duplicated full-width logo is clipped by each
+   half, so the complete gold mark physically separates at the center seam. */
+const desktopBrandCurtain = `<div class="epic-desktop-brand-curtain" data-epic-desktop-brand-curtain aria-hidden="true">
+  <div class="epic-brand-curtain-half epic-brand-curtain-left"><div class="epic-brand-curtain-content"></div></div>
+  <div class="epic-brand-curtain-half epic-brand-curtain-right"><div class="epic-brand-curtain-content"></div></div>
+  <div class="epic-brand-curtain-seam" aria-hidden="true"></div>
+</div>`;
+
 const desktopCurtainSafety = `<script data-epic-desktop-curtain-safety>
   (() => {
     if (window.matchMedia('(max-width: 780px)').matches) return;
 
+    const curtain = document.querySelector('[data-epic-desktop-brand-curtain]');
+    if (!curtain) return;
+
+    const startedAt = performance.now();
     let released = false;
+
+    const unlock = () => {
+      document.documentElement.classList.remove('is-loading');
+      document.body && document.body.classList.remove('is-loading');
+      document.documentElement.style.removeProperty('overflow');
+      if (document.body) document.body.style.removeProperty('overflow');
+    };
+
     const release = () => {
       if (released) return;
       released = true;
-
+      unlock();
+      curtain.classList.add('is-open');
       document.documentElement.classList.add('epic-video-ready');
-      const intro = document.querySelector('[data-epic-liquid-intro]');
-      if (!intro) return;
-
-      intro.setAttribute('aria-hidden', 'true');
-      window.setTimeout(() => intro.remove(), 1050);
+      window.setTimeout(() => curtain.remove(), 1200);
     };
 
-    const schedule = () => window.setTimeout(release, 900);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', schedule, { once: true });
-    } else {
-      schedule();
+    const requestRelease = () => {
+      const elapsed = performance.now() - startedAt;
+      window.setTimeout(release, Math.max(0, 950 - elapsed));
+    };
+
+    const video = document.querySelector('[data-epic-mask-video]');
+    if (video) {
+      video.addEventListener('loadeddata', requestRelease, { once: true });
+      video.addEventListener('canplay', requestRelease, { once: true });
+      if (video.readyState >= 2) requestRelease();
     }
 
-    window.setTimeout(release, 2100);
+    if (document.readyState === 'complete') requestRelease();
+    else window.addEventListener('load', requestRelease, { once: true });
+
+    window.setTimeout(release, 1900);
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) release();
+    }, { once: true });
   })();
 </script>`;
 
@@ -70,6 +96,9 @@ for (const path of htmlFiles) {
   html = html.replace(/src="\/assets\/app\.js(?:\?v=[^"]+)?"/, `src="/assets/app.js?v=${assetVersion}"`);
 
   if (relative(dist, path).replaceAll('\\', '/') === 'index.html') {
+    if (!html.includes('data-epic-desktop-brand-curtain')) {
+      html = html.replace(/(<body[^>]*class="[^"]*home-page[^"]*"[^>]*>)/, `$1\n${desktopBrandCurtain}`);
+    }
     if (!html.includes('data-epic-mobile-preloader-safety')) {
       html = html.replace('</body>', `${mobilePreloaderSafety}\n</body>`);
     }
@@ -82,32 +111,83 @@ for (const path of htmlFiles) {
   await writeFile(path, html, 'utf8');
 }
 
-/* Preserve the measured desktop glyph canvas while moving the complete word a
-   fraction left and reducing it by one additional percentage point. This uses
-   the available left-side breathing room to protect the C on wide displays. */
-const desktopMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 660 260'%3E%3Ctext x='330' y='228' text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='300' font-weight='900' letter-spacing='-22'%3EEPIC%3C/text%3E%3C/svg%3E")`;
+/* The previous SVG canvas was narrower than the rendered Arial Black word,
+   so the C could be clipped inside the mask image before CSS positioning was
+   applied. This wider canvas preserves the near-edge-to-edge impact while
+   giving both outer glyphs real internal clearance. */
+const desktopMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 270'%3E%3Ctext x='352' y='238' text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='300' font-weight='900' letter-spacing='-22'%3EEPIC%3C/text%3E%3C/svg%3E")`;
 
 /* Mobile remains the approved evenly balanced 2x2 field while the user decides
    whether to refine that composition further. */
 const mobileMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 560 1080'%3E%3Cg text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='400' font-weight='900'%3E%3Ctext x='145' y='460'%3EE%3C/text%3E%3Ctext x='415' y='460'%3EP%3C/text%3E%3Ctext x='145' y='970'%3EI%3C/text%3E%3Ctext x='415' y='970'%3EC%3C/text%3E%3C/g%3E%3C/svg%3E")`;
 
 let styles = await readFile(stylesPath, 'utf8');
-styles += `\n\n/* EPIC final hero precision v5 */\n
+styles += `\n\n/* EPIC final hero precision v6 */\n
 @media (min-width:781px){
   .epic-mask-video{
     -webkit-mask-image:${desktopMask}!important;
     mask-image:${desktopMask}!important;
-    -webkit-mask-size:min(95.5vw,242svh) auto!important;
-    mask-size:min(95.5vw,242svh) auto!important;
-    -webkit-mask-position:calc(50% - .9vw) center!important;
-    mask-position:calc(50% - .9vw) center!important;
+    -webkit-mask-size:min(99vw,250svh) auto!important;
+    mask-size:min(99vw,250svh) auto!important;
+    -webkit-mask-position:center center!important;
+    mask-position:center center!important;
   }
 
-  /* The desktop homepage curtain is deliberately graphic and minimal. Remove
-     the white EPIC composition and let the two matte-black halves separate. */
-  body.home-page .epic-split-intro .preloader-center-split{
+  /* Retire the two competing legacy homepage loaders on desktop. The dedicated
+     branded curtain below is the single visible and independently released
+     loading experience. */
+  body.home-page .epic-liquid-intro,
+  body.home-page .preloader.split-preloader{
     display:none!important;
   }
+
+  .epic-desktop-brand-curtain{
+    position:fixed!important;
+    inset:0!important;
+    z-index:100000!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    background:#030303!important;
+  }
+  .epic-brand-curtain-half{
+    position:absolute!important;
+    top:0!important;
+    bottom:0!important;
+    width:50%!important;
+    overflow:hidden!important;
+    background:#030303!important;
+    transition:transform 1.05s cubic-bezier(.76,0,.24,1)!important;
+    will-change:transform!important;
+  }
+  .epic-brand-curtain-left{left:0!important}
+  .epic-brand-curtain-right{right:0!important}
+  .epic-brand-curtain-content{
+    position:absolute!important;
+    top:50%!important;
+    width:100vw!important;
+    height:min(180px,22vw)!important;
+    transform:translateY(-50%)!important;
+    background-image:url('${brandLogo}')!important;
+    background-position:center!important;
+    background-repeat:no-repeat!important;
+    background-size:contain!important;
+    filter:drop-shadow(0 0 24px rgba(212,175,55,.28))!important;
+  }
+  .epic-brand-curtain-left .epic-brand-curtain-content{left:0!important}
+  .epic-brand-curtain-right .epic-brand-curtain-content{right:0!important}
+  .epic-brand-curtain-seam{
+    position:absolute!important;
+    top:0!important;
+    bottom:0!important;
+    left:50%!important;
+    width:1px!important;
+    background:linear-gradient(to bottom,transparent 0%,rgba(212,175,55,.72) 18%,rgba(212,175,55,.72) 82%,transparent 100%)!important;
+    box-shadow:0 0 18px rgba(212,175,55,.32)!important;
+    transition:opacity .22s ease!important;
+  }
+  .epic-desktop-brand-curtain.is-open .epic-brand-curtain-left{transform:translateX(-101%)!important}
+  .epic-desktop-brand-curtain.is-open .epic-brand-curtain-right{transform:translateX(101%)!important}
+  .epic-desktop-brand-curtain.is-open .epic-brand-curtain-seam{opacity:0!important}
 
   /* Fill the hero canvas completely when the visit-long static fallback takes
      over. The landscape source remains centered and no side gutters remain. */
@@ -123,6 +203,8 @@ styles += `\n\n/* EPIC final hero precision v5 */\n
 }
 
 @media (max-width:780px){
+  .epic-desktop-brand-curtain{display:none!important}
+
   .epic-mask-video{
     -webkit-mask-image:${mobileMask}!important;
     mask-image:${mobileMask}!important;
@@ -157,11 +239,12 @@ styles += `\n\n/* EPIC final hero precision v5 */\n
 `;
 await writeFile(stylesPath, styles, 'utf8');
 
-if (!homepageUpdated) throw new Error('Homepage curtain safety was not installed.');
-if (!styles.includes('min(95.5vw,242svh)')) throw new Error('Desktop mask clearance was not installed.');
-if (!styles.includes('calc(50% - .9vw)')) throw new Error('Desktop mask recentering was not installed.');
-if (!styles.includes('body.home-page .epic-split-intro .preloader-center-split')) throw new Error('Desktop white loader content was not removed.');
-if (!styles.includes('viewBox=\'0 0 560 1080\'')) throw new Error('Mobile 2x2 EPIC mask was not preserved.');
+if (!homepageUpdated) throw new Error('Homepage curtain system was not installed.');
+if (!styles.includes("viewBox='0 0 720 270'")) throw new Error('Widened desktop mask canvas was not installed.');
+if (!styles.includes('min(99vw,250svh)')) throw new Error('Desktop mask sizing was not installed.');
+if (!styles.includes('.epic-desktop-brand-curtain')) throw new Error('Dedicated branded desktop curtain styles were not installed.');
+if (!styles.includes("background-image:url('https://assets.cdn.filesafe.space")) throw new Error('Gold EPIC curtain logo was not installed.');
+if (!styles.includes("viewBox='0 0 560 1080'")) throw new Error('Mobile 2x2 EPIC mask was not preserved.');
 if (!styles.includes('.bikini-prize-ribbon>strong:last-child')) throw new Error('Final prize divider was not preserved.');
 
-console.log(`Applied desktop curtain fail-safe, removed white loader content, cleared the C edge, and preserved the approved mobile hero across ${htmlFiles.length} generated pages.`);
+console.log(`Restored a visible gold desktop curtain, widened the desktop EPIC mask canvas, and preserved the approved mobile hero across ${htmlFiles.length} generated pages.`);
