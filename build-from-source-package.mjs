@@ -26,7 +26,7 @@ const archivePath = join(root, '.epic-source.tar.gz');
 await writeFile(archivePath, archive);
 await rm(sourceDir, { recursive: true, force: true });
 await mkdir(sourceDir, { recursive: true });
-const extract = spawnSync('tar', ['-xzf', archivePath, '-C', sourceDir], { stdio: 'inherit' });
+const extract = spawnSync('tar', ['--no-same-owner', '-xzf', archivePath, '-C', sourceDir], { stdio: 'inherit' });
 if (extract.status !== 0) throw new Error('Unable to extract the EPIC source package.');
 
 const urls = JSON.parse(await readFile(join(root, 'hero-urls.json'), 'utf8'));

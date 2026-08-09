@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 const dist = join(process.cwd(), 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-mobile-make-it-epic-v2';
+const assetVersion = '20260809-mobile-make-it-epic-v3';
 
 async function findHtml(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -19,7 +19,7 @@ async function findHtml(directory) {
 /* Mobile-only MAKE / IT / EPIC knockout mask. The portrait canvas and three
    measured baselines keep the type large, balanced, and safe across narrow and
    short phones while leaving the desktop hero completely untouched. */
-const mobileMakeItEpicMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1440'%3E%3Cg text-anchor='middle' font-family='Arial%20Black,Arial,sans-serif' font-weight='900'%3E%3Ctext x='360' y='486' font-size='245' letter-spacing='-14'%3EMAKE%3C/text%3E%3Ctext x='360' y='820' font-size='250' letter-spacing='-10'%3EIT%3C/text%3E%3Ctext x='360' y='1174' font-size='270' letter-spacing='-18'%3EEPIC%3C/text%3E%3C/g%3E%3C/svg%3E")`;
+const mobileMakeItEpicMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1440'%3E%3Cg text-anchor='middle' font-family='Arial%20Black,Arial,sans-serif' font-weight='900'%3E%3Ctext x='360' y='408' font-size='245' letter-spacing='-14'%3EMAKE%3C/text%3E%3Ctext x='360' y='820' font-size='250' letter-spacing='-10'%3EIT%3C/text%3E%3Ctext x='360' y='1255' font-size='270' letter-spacing='-18'%3EEPIC%3C/text%3E%3C/g%3E%3C/svg%3E")`;
 
 const htmlFiles = await findHtml(dist);
 for (const path of htmlFiles) {
@@ -30,7 +30,7 @@ for (const path of htmlFiles) {
 }
 
 let styles = await readFile(stylesPath, 'utf8');
-styles += `\n\n/* EPIC mobile MAKE IT EPIC mask tuning v2 — 50% tighter vertical word gaps */\n
+styles += `\n\n/* EPIC mobile MAKE IT EPIC mask tuning v3 — 25% spacing restored */\n
 @media (max-width:780px){
   .epic-mask-video{
     -webkit-mask-image:${mobileMakeItEpicMask}!important;
@@ -73,8 +73,8 @@ if (!styles.includes("viewBox='0 0 720 1440'")) throw new Error('MAKE IT EPIC mo
 if (!styles.includes("%3EMAKE%3C/text%3E")) throw new Error('MAKE line is missing from the mobile mask.');
 if (!styles.includes("%3EIT%3C/text%3E")) throw new Error('IT line is missing from the mobile mask.');
 if (!styles.includes("%3EEPIC%3C/text%3E")) throw new Error('EPIC line is missing from the mobile mask.');
-if (!styles.includes("y='486' font-size='245'")) throw new Error('MAKE baseline is not using the 50% tighter spacing.');
-if (!styles.includes("y='1174' font-size='270'")) throw new Error('EPIC baseline is not using the 50% tighter spacing.');
+if (!styles.includes("y='408' font-size='245'")) throw new Error('MAKE baseline is not using the restored spacing.');
+if (!styles.includes("y='1255' font-size='270'")) throw new Error('EPIC baseline is not using the restored spacing.');
 if (!styles.includes('min(97vw,50svh)')) throw new Error('Primary mobile mask sizing was not installed.');
 if (!styles.includes('min(98vw,49.5svh)')) throw new Error('Narrow-phone mask tuning was not installed.');
 

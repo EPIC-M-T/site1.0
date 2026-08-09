@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 
 const dist = join(process.cwd(), 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-final-polish-v7';
+const assetVersion = '20260809-final-polish-v8';
 const brandLogo = 'https://assets.cdn.filesafe.space/YzjwmP6zpvDUp28hrM1o/media/6877effcc00dfc571e6a416c.png';
 
 async function findHtml(directory) {
@@ -17,7 +17,7 @@ async function findHtml(directory) {
   return files;
 }
 
-/* One responsive branded curtain now serves desktop and mobile. Each half holds
+/* One responsive branded curtain serves every page on desktop and mobile. Each half holds
    a full-viewport copy of the gold logo, clipped at the center seam, so the
    complete mark physically separates when the curtain opens. */
 const brandCurtain = `<div class="epic-desktop-brand-curtain" data-epic-desktop-brand-curtain aria-hidden="true">
@@ -77,22 +77,24 @@ const brandCurtainSafety = `<script data-epic-desktop-curtain-safety>
 </script>`;
 
 const htmlFiles = await findHtml(dist);
-let homepageUpdated = false;
+let curtainsUpdated = 0;
 
 for (const path of htmlFiles) {
   let html = await readFile(path, 'utf8');
   html = html.replace(/href="\/assets\/styles\.css(?:\?v=[^"]+)?"/, `href="/assets/styles.css?v=${assetVersion}"`);
   html = html.replace(/src="\/assets\/app\.js(?:\?v=[^"]+)?"/, `src="/assets/app.js?v=${assetVersion}"`);
 
-  if (relative(dist, path).replaceAll('\\', '/') === 'index.html') {
-    if (!html.includes('data-epic-desktop-brand-curtain')) {
-      html = html.replace(/(<body[^>]*class="[^"]*home-page[^"]*"[^>]*>)/, `$1\n${brandCurtain}`);
+  if (!html.includes('data-epic-desktop-brand-curtain')) {
+    const withCurtain = html.replace(/(<body\b[^>]*>)/i, `$1\n${brandCurtain}`);
+    if (withCurtain === html) {
+      throw new Error(`Unable to install the branded curtain in ${relative(dist, path)}.`);
     }
-    if (!html.includes('data-epic-desktop-curtain-safety')) {
-      html = html.replace('</body>', `${brandCurtainSafety}\n</body>`);
-    }
-    homepageUpdated = true;
+    html = withCurtain;
   }
+  if (!html.includes('data-epic-desktop-curtain-safety')) {
+    html = html.replace('</body>', `${brandCurtainSafety}\n</body>`);
+  }
+  if (html.includes('data-epic-desktop-brand-curtain') && html.includes('data-epic-desktop-curtain-safety')) curtainsUpdated += 1;
 
   await writeFile(path, html, 'utf8');
 }
@@ -105,11 +107,11 @@ const desktopMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/200
 const mobileMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 560 1080'%3E%3Cg text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-size='400' font-weight='900'%3E%3Ctext x='145' y='460'%3EE%3C/text%3E%3Ctext x='415' y='460'%3EP%3C/text%3E%3Ctext x='145' y='970'%3EI%3C/text%3E%3Ctext x='415' y='970'%3EC%3C/text%3E%3C/g%3E%3C/svg%3E")`;
 
 let styles = await readFile(stylesPath, 'utf8');
-styles += `\n\n/* EPIC final hero precision v7 */\n
-/* Retire both legacy homepage loaders at every breakpoint. The responsive
-   branded curtain below is the single homepage loading experience. */
-body.home-page .epic-liquid-intro,
-body.home-page .preloader.split-preloader{
+styles += `\n\n/* EPIC final hero precision v8 */\n
+/* Retire the legacy text-based loaders at every breakpoint. The responsive
+   branded curtain below is the single loading and page-transition experience. */
+.epic-liquid-intro,
+.preloader.split-preloader{
   display:none!important;
 }
 
@@ -218,7 +220,7 @@ body.home-page .preloader.split-preloader{
 `;
 await writeFile(stylesPath, styles, 'utf8');
 
-if (!homepageUpdated) throw new Error('Homepage curtain system was not installed.');
+if (curtainsUpdated !== htmlFiles.length) throw new Error(`Installed branded curtains on ${curtainsUpdated} of ${htmlFiles.length} pages.`);
 if (!styles.includes("viewBox='0 0 720 270'")) throw new Error('Widened desktop mask canvas was not installed.');
 if (!styles.includes('min(99vw,250svh)')) throw new Error('Desktop mask sizing was not installed.');
 if (!styles.includes('.epic-desktop-brand-curtain')) throw new Error('Responsive branded curtain styles were not installed.');
@@ -227,4 +229,4 @@ if (!styles.includes("background-image:url('https://assets.cdn.filesafe.space"))
 if (!styles.includes("viewBox='0 0 560 1080'")) throw new Error('Mobile 2x2 EPIC mask was not preserved.');
 if (!styles.includes('.bikini-prize-ribbon>strong:last-child')) throw new Error('Final prize divider was not preserved.');
 
-console.log(`Applied the gold split-logo curtain reveal to desktop and mobile while preserving both approved hero masks across ${htmlFiles.length} generated pages.`);
+console.log(`Applied the gold split-logo curtain reveal to all ${htmlFiles.length} generated pages on desktop and mobile while preserving both approved hero masks.`);
