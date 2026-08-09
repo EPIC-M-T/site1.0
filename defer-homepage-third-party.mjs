@@ -7,7 +7,7 @@ let homepage = await readFile(homepagePath, 'utf8');
 // Vercel serves static assets with a long immutable cache lifetime. The source
 // site uses stable filenames, so add a deployment-specific query key to ensure
 // browsers receive the current hero CSS and application runtime immediately.
-const assetVersion = '20260808-hero-performance-v1';
+const assetVersion = '20260809-hero-v3';
 homepage = homepage.replace(
   'href="/assets/styles.css"',
   `href="/assets/styles.css?v=${assetVersion}"`
