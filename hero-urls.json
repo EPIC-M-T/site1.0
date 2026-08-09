@@ -1,4 +1,8 @@
 {
-  "desktop": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-hero-desktop-min.mp4",
-  "mobile": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-hero-mobile-min.mp4"
+  "desktop": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-desktop-intro-1080p.mp4",
+  "desktopType": "video/mp4",
+  "desktopStatic": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-hero-desktop.png",
+  "mobile": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-mobile-intro-1080p-min.webm",
+  "mobileType": "video/webm",
+  "mobileStatic": "https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/epic-hero-mobile.png"
 }
