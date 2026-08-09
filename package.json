@@ -1,10 +1,10 @@
 {
   "name": "epic-models-and-talent",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build-from-source-package.mjs && node remove-minor-application-option.mjs && node apply-homepage-divisions.mjs && node finalize-five-divisions.mjs && node apply-cinematic-hero.mjs && node apply-hero-v3-layout.mjs && node apply-hero-v4-media.mjs && node apply-instagram-embeds.mjs && node test-full-instagram-embed-one.mjs && node defer-homepage-third-party.mjs && node apply-sitewide-launch-polish.mjs"
+    "build": "node build-from-source-package.mjs && node remove-minor-application-option.mjs && node apply-homepage-divisions.mjs && node finalize-five-divisions.mjs && node apply-cinematic-hero.mjs && node apply-hero-v3-layout.mjs && node apply-hero-v4-media.mjs && node apply-instagram-embeds.mjs && node test-full-instagram-embed-one.mjs && node defer-homepage-third-party.mjs && node apply-sitewide-launch-polish.mjs && node apply-nested-sitewide-polish.mjs"
   },
   "engines": {
     "node": "24.x"
