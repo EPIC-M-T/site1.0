@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build-from-source-package.mjs && node remove-minor-application-option.mjs && node apply-homepage-divisions.mjs && node finalize-five-divisions.mjs && node apply-cinematic-hero.mjs && node apply-hero-v3-layout.mjs && node apply-hero-v4-media.mjs && node apply-instagram-embeds.mjs && node test-full-instagram-embed-one.mjs && node defer-homepage-third-party.mjs && node apply-sitewide-launch-polish.mjs && node apply-nested-sitewide-polish.mjs && node apply-final-hero-mobile-instagram-polish.mjs && node apply-final-mask-precision.mjs && node apply-mobile-make-it-epic-mask.mjs && node apply-mobile-division-scroll-focus.mjs"
+    "build": "node build-from-source-package.mjs && node remove-minor-application-option.mjs && node apply-homepage-divisions.mjs && node finalize-five-divisions.mjs && node apply-cinematic-hero.mjs && node apply-hero-v3-layout.mjs && node apply-hero-v4-media.mjs && node apply-instagram-embeds.mjs && node test-full-instagram-embed-one.mjs && node defer-homepage-third-party.mjs && node apply-sitewide-launch-polish.mjs && node apply-nested-sitewide-polish.mjs && node apply-final-hero-mobile-instagram-polish.mjs && node apply-final-mask-precision.mjs && node apply-mobile-make-it-epic-mask.mjs && node apply-mobile-division-scroll-focus.mjs && node apply-mobile-bikini-prize-pool.mjs && node apply-mobile-service-card-spacing.mjs && node apply-about-card-density.mjs && node apply-contact-submit-spacing.mjs"
   },
   "engines": {
     "node": "24.x"
