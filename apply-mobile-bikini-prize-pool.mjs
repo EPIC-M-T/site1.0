@@ -4,8 +4,8 @@ import { join } from 'node:path';
 const dist = join(process.cwd(), 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
 const pagePaths = [join(dist, 'index.html'), join(dist, '404.html')];
-const assetVersion = '20260809-mobile-bikini-prize-pool-v1';
-const marker = '/* EPIC mobile Bikini Contest prize-pool layout v1 */';
+const assetVersion = '20260809-mobile-bikini-prize-pool-v2';
+const marker = '/* EPIC mobile Bikini Contest prize-pool layout v2 */';
 const prizePoolUrl = 'https://avd0q6zau931hwsb.public.blob.vercel-storage.com/epic-models-%26-talent/Prize-pool.webp';
 
 const artFrameNeedle = `          <div class="bikini-art-scrim" aria-hidden="true"></div>\n        </div>\n        <div class="bikini-prize-ribbon" aria-label="Official prize pool">`;
@@ -59,11 +59,9 @@ styles += `\n\n${marker}
   }
   .bikini-prize-ribbon{display:none!important}
 
-  /* The mobile prize-pool art now carries the first- and second-prize story,
-     so remove the two duplicate fact boxes while preserving Fan Vote. */
-  .bikini-facts{grid-template-columns:1fr!important}
-  .bikini-facts>div:nth-child(-n+2){display:none!important}
-  .bikini-facts>div{border:0!important}
+  /* The supplied artwork now carries the complete mobile prize story, so the
+     legacy highlight row—including Fan Vote / Meet the Girls—is omitted. */
+  .bikini-facts{display:none!important}
 }
 `;
 await writeFile(stylesPath, styles, 'utf8');
@@ -83,8 +81,8 @@ if (!styles.includes('.bikini-feature-art{\n    order:-1!important;')) {
 if (!styles.includes('.bikini-prize-ribbon{display:none!important}')) {
   throw new Error('Legacy mobile prize ribbon was not disabled.');
 }
-if (!styles.includes('.bikini-facts>div:nth-child(-n+2){display:none!important}')) {
-  throw new Error('Duplicate mobile contest fact boxes were not disabled.');
+if (!styles.includes('.bikini-facts{display:none!important}')) {
+  throw new Error('Legacy mobile contest highlight row was not disabled.');
 }
 
-console.log('Installed the mobile Bikini Contest logo-first layout and supplied prize-pool artwork.');
+console.log('Installed the mobile Bikini Contest logo-first layout, supplied prize-pool artwork, and removed the legacy highlight row.');
