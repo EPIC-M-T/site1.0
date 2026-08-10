@@ -6,8 +6,8 @@ const dist = join(root, 'dist');
 const indexPath = join(dist, 'index.html');
 const appPath = join(dist, 'assets', 'app.js');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-reactive-gold-performance-v3';
-const styleMarker = '/* EPIC reactive gold and performance pass v3 */';
+const assetVersion = '20260809-reactive-gold-performance-v4';
+const styleMarker = '/* EPIC reactive gold and performance pass v4 */';
 const scriptMarker = 'data-epic-gold-inlay-reactive';
 
 const imageDeliveryUrl = (url, width, quality) =>
@@ -63,19 +63,14 @@ if (!homepage.includes(staticLoadNeedle)) throw new Error('Static hero preload r
 homepage = homepage.replace(staticLoadNeedle, staticLoadReplacement);
 
 const freezeFallbackNeedle = `        window.setTimeout(() => finishFreeze(Boolean(staticImage && staticImage.complete && staticImage.naturalWidth > 0)), 1800);`;
-const freezeFallbackReplacement = `        window.setTimeout(() => {\n          const staticReady = Boolean(staticImage && staticImage.complete && staticImage.naturalWidth > 0);\n          if (staticReady) {\n            finishFreeze(true);\n          } else if (fullVideo.readyState >= 2) {\n            finishFreeze(false);\n          } else {\n            // Never pause both hero layers before either fallback can paint.\n            settled = true;\n          }\n        }, 1800);`;
+const freezeFallbackReplacement = `        window.setTimeout(() => {\n          const staticReady = Boolean(staticImage && staticImage.complete && staticImage.naturalWidth > 0);\n          if (staticReady) {\n            finishFreeze(true);\n          }\n          // If the still is still loading, leave the videos paintable. The\n          // existing load listener completes the static handoff when ready.\n        }, 1800);`;
 if (!homepage.includes(freezeFallbackNeedle)) throw new Error('Hero freeze fallback was not found.');
 homepage = homepage.replace(freezeFallbackNeedle, freezeFallbackReplacement);
 
 const finishFreezeNeedle = `        const finishFreeze = (hasStaticImage) => {\n          if (settled) return;\n          settled = true;\n          maskVideo.pause();`;
-const finishFreezeReplacement = `        const finishFreeze = (hasStaticImage) => {\n          if (settled) return;\n          const heroBounds = hero.getBoundingClientRect();\n          const heroIsVisible = heroBounds.bottom > 0 && heroBounds.top < window.innerHeight;\n          if (heroIsVisible) {\n            settled = true;\n            resetHeroForReturn();\n            return;\n          }\n          settled = true;\n          maskVideo.pause();`;
+const finishFreezeReplacement = `        const finishFreeze = (hasStaticImage) => {\n          if (settled) return;\n          if (!hasStaticImage) {\n            // A failed still must never leave the hero as a black paused layer.\n            settled = true;\n            return;\n          }\n          settled = true;\n          maskVideo.pause();`;
 if (!homepage.includes(finishFreezeNeedle)) throw new Error('Hero finish-freeze runtime was not found.');
 homepage = homepage.replace(finishFreezeNeedle, finishFreezeReplacement);
-
-const freezeObserverNeedle = `        const freezeObserver = new IntersectionObserver((entries) => {\n          if (!entries.some((entry) => entry.isIntersecting)) return;\n          freezeObserver.disconnect();\n          freezeHero();\n        }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });\n        freezeObserver.observe(bikiniSection);`;
-const freezeObserverReplacement = `        const freezeObserver = new IntersectionObserver((entries) => {\n          if (!entries.some((entry) => entry.isIntersecting)) return;\n          freezeHero();\n        }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });\n        freezeObserver.observe(bikiniSection);\n\n        // A rapid return to the hero must always reactivate a paintable video\n        // layer instead of leaving a paused frame waiting on the lazy still.\n        const heroReturnObserver = new IntersectionObserver((entries) => {\n          const returning = entries.some((entry) => entry.isIntersecting);\n          if (returning && hero.classList.contains('is-static')) resetHeroForReturn();\n        }, { threshold: 0.03 });\n        heroReturnObserver.observe(hero);`;
-if (!homepage.includes(freezeObserverNeedle)) throw new Error('Hero freeze observer was not found.');
-homepage = homepage.replace(freezeObserverNeedle, freezeObserverReplacement);
 
 const resizeNeedle = `      window.addEventListener('resize', () => window.ScrollTrigger.refresh(), { passive: true });`;
 const resizeReplacement = `      let refreshTimer = 0;\n      window.addEventListener('resize', () => {\n        window.clearTimeout(refreshTimer);\n        refreshTimer = window.setTimeout(() => window.ScrollTrigger.refresh(), 140);\n      }, { passive: true });`;
@@ -117,7 +112,7 @@ const requiredHomepageChecks = [
   deliveredMedia.heroDesktop,
   deliveredMedia.modelsMobile,
   'width="1440" height="1440" loading="lazy" decoding="async"',
-  'heroReturnObserver',
+  'existing load listener completes the static handoff when ready',
   scriptMarker
 ];
 for (const check of requiredHomepageChecks) {
@@ -130,4 +125,4 @@ if (!finalStyles.includes(styleMarker) || !finalStyles.includes('epic-gold-inlay
   throw new Error('Reactive gold styles were not installed.');
 }
 
-console.log('Installed reactive gold inlay, resilient hero return state, responsive image delivery, and mobile/desktop runtime throttles.');
+console.log('Installed reactive gold inlay, persistent static hero handoff, responsive image delivery, and mobile/desktop runtime throttles.');
