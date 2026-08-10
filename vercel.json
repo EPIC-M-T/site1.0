@@ -4,6 +4,24 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "images": {
+    "sizes": [640, 960, 1080, 1920],
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "avd0q6zau931hwsb.public.blob.vercel-storage.com",
+        "port": "",
+        "pathname": "^/.*$",
+        "search": ""
+      }
+    ],
+    "minimumCacheTTL": 2592000,
+    "qualities": [90, 92],
+    "formats": ["image/avif", "image/webp"],
+    "dangerouslyAllowSVG": false,
+    "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
+    "contentDispositionType": "inline"
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -17,6 +35,18 @@
     },
     {
       "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/animations/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
