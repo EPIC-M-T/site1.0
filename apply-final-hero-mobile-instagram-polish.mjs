@@ -4,8 +4,8 @@ import { join, relative } from 'node:path';
 const root = process.cwd();
 const dist = join(root, 'dist');
 const stylesPath = join(dist, 'assets', 'styles.css');
-const assetVersion = '20260809-final-polish-v2';
-const marker = '/* EPIC final hero and mobile polish v2 */';
+const assetVersion = '20260809-final-polish-v3';
+const marker = '/* EPIC final hero and mobile polish v3 */';
 
 async function findHtml(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -76,16 +76,33 @@ for (const path of htmlFiles) {
     const chunks = html.split(cardMarker);
     if (chunks.length !== 7) throw new Error(`Expected six Instagram cards, found ${chunks.length - 1}.`);
 
-    for (let slot = 1; slot <= 6; slot += 1) {
-      if (slot === 2 || slot === 5) continue;
+    const relabelCard = (card, position) => {
+      const label = String(position).padStart(2, '0');
+      return card
+        .replace(/(<div class="instagram-native-label"[\s\S]*?<b>)\d{2}(<\/b>)/, `$1${label}$2`)
+        .replace(/Loading EPIC Instagram post \d{2}…/, `Loading EPIC Instagram post ${label}…`);
+    };
+
+    // The two embeds proven to render reliably were source positions 02 and 05.
+    // Promote those exact cards to the first two visible positions, then follow
+    // them with the four intentional placeholders on every responsive layout.
+    const liveCards = [chunks[2], chunks[5]];
+    const placeholderCards = [chunks[1], chunks[3], chunks[4], chunks[6]].map((card, index) => {
       const blockquotePattern = /<blockquote[\s\S]*?<\/blockquote>/;
-      if (!blockquotePattern.test(chunks[slot])) throw new Error(`Instagram blockquote ${slot} was not found.`);
-      chunks[slot] = chunks[slot].replace(blockquotePattern, placeholder(slot));
-    }
-    html = chunks.join(cardMarker);
+      if (!blockquotePattern.test(card)) throw new Error(`Instagram placeholder source ${index + 1} was not found.`);
+      return card.replace(blockquotePattern, placeholder(index + 3));
+    });
+    const orderedCards = [...liveCards, ...placeholderCards].map((card, index) => relabelCard(card, index + 1));
+    html = chunks[0] + orderedCards.map((card) => `${cardMarker}${card}`).join('');
 
     const remainingEmbeds = (html.match(/class="instagram-media instagram-native-embed"/g) || []).length;
-    if (remainingEmbeds !== 2) throw new Error(`Expected only Instagram cards 2 and 5 to remain live, found ${remainingEmbeds}.`);
+    if (remainingEmbeds !== 2) throw new Error(`Expected exactly two working Instagram embeds, found ${remainingEmbeds}.`);
+    if (!orderedCards[0].includes('instagram-media instagram-native-embed') || !orderedCards[1].includes('instagram-media instagram-native-embed')) {
+      throw new Error('The two working Instagram embeds were not promoted to positions 1 and 2.');
+    }
+    if (orderedCards.slice(2).some((card) => card.includes('instagram-media instagram-native-embed'))) {
+      throw new Error('A live Instagram embed remains below the first two positions.');
+    }
 
     if (!html.includes('data-epic-mobile-menu-reveal')) {
       html = html.replace('</body>', `${mobileMenuRevealScript}\n</body>`);
@@ -212,8 +229,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden!important;overscroll-behav
   .bikini-prize-ribbon>strong b{font-size:9px!important}
 }
 
-/* Only cards 2 and 5 retain live Instagram embeds. The remaining luxury frames
-   become deliberate, stable placeholders instead of displaying broken embeds. */
+/* The two working embeds from source cards 2 and 5 occupy visible positions 1
+   and 2. The remaining luxury frames are deliberate, stable placeholders. */
 .instagram-native-placeholder{
   width:100%;
   height:720px;
@@ -255,4 +272,4 @@ if (!styles.includes('min(98vw,270svh)')) throw new Error('Large responsive desk
 if (!styles.includes('body.home-page.epic-hero-cleared')) throw new Error('Mobile hero menu reveal was not installed.');
 if (!styles.includes('grid-template-columns:repeat(3,minmax(0,1fr))')) throw new Error('Three-column prize ribbon correction was not installed.');
 
-console.log(`Applied final EPIC polish to ${htmlFiles.length} pages: full-scale hero, aligned mobile I, hero-aware menu, ornate buttons, fixed prize grid, horizontal overflow guardrails, and four stable Instagram placeholders.`);
+console.log(`Applied final EPIC polish to ${htmlFiles.length} pages: full-scale hero, aligned mobile I, hero-aware menu, ornate buttons, fixed prize grid, horizontal overflow guardrails, working Instagram posts promoted to positions 1 and 2, and four stable placeholders.`);
